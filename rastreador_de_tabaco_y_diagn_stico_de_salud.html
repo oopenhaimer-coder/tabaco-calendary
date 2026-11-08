@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastreador de Tabaco & Diagnóstico de Salud</title>
+    <!-- Tailwind CSS para diseño moderno y responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .calendar-day {
+            min-height: 44px;
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover:not(.empty) {
+            transform: scale(1.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen pb-12">
+
+    <!-- Encabezado de la Aplicación -->
+    <header class="bg-slate-900 text-white py-6 shadow-md border-b border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-500/20 p-3 rounded-xl border border-red-500/30 text-red-400">
+                    <i class="fa-solid fa-lungs-virus text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Monitor de Salud & Tabaco</h1>
+                    <p class="text-slate-400 text-sm">Evaluación de riesgos y diario de consumo personal</p>
+                </div>
+            </div>
+            
+            <!-- Reproductor de Música Jazz en Línea -->
+            <div class="flex items-center gap-3 bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-700/80 shadow-inner">
+                <button id="musicToggleBtn" onclick="toggleJazzMusic()" class="w-9 h-9 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition shadow-md focus:outline-none">
+                    <i id="musicIcon" class="fa-solid fa-music"></i>
+                </button>
+                <div class="flex flex-col">
+                    <span class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sax-hot text-amber-400 text-xs"></i>
+                        Jazz Relax Ambient
+                    </span>
+                    <span id="musicStatusText" class="text-[10px] text-slate-400">Audio pausado</span>
+                </div>
+                <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" class="w-16 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500 ml-2">
+            </div>
+
+            <div class="hidden sm:flex bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-300 items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                <span>Tus datos se guardan en el navegador</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Audio Element de Jazz Relajante Ambiente -->
+    <audio id="jazzAudio" loop preload="auto">
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=smooth-jazz-112836.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- COLUMNA IZQUIERDA: Formulario de Entrada y Calendario (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+
+            <!-- Card 1: Perfil de Usuario -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear text-indigo-600"></i>
+                    Información de Consumo
+                </h2>
+                
+                <form id="profileForm" class="space-y-4" onsubmit="event.preventDefault(); calculateRisk();">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1" for="age">Edad (años)</label>
+                            <div class="relative">
+                                <input type="number" id="age" min="12" max="110" value="35" required
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <i class="fa-solid fa-cake-candles absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1" for="weight">Peso (kg)</label>
+                            <div class="relative">
+                                <input type="number" id="weight" min="30" max="250" value="70" required
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <i class="fa-solid fa-weight-scale absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1" for="yearsSmoking">Años fumando</label>
+                            <div class="relative">
+                                <input type="number" id="yearsSmoking" min="0" max="90" value="10" required
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <i class="fa-solid fa-timeline absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1" for="cigsPerDay">Cigarrillos / día</label>
+                            <div class="relative">
+                                <input type="number" id="cigsPerDay" min="1" max="100" value="15" required
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                                <i class="fa-solid fa-smoking absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg shadow-sm transition duration-150 flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-calculator"></i>
+                        Actualizar Evaluación
+                    </button>
+                </form>
+            </div>
+
+            <!-- Card 2: Calendario Interactivo -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-check text-indigo-600"></i>
+                        Registro de Consumo
+                    </h2>
+                    <span id="calendarMonthYear" class="text-xs font-bold text-slate-600 uppercase tracking-wider"></span>
+                </div>
+
+                <!-- Botones de Navegación del Mes -->
+                <div class="flex items-center justify-between mb-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                    <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition shadow-xs">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <button id="toggleTodayBtn" onclick="toggleToday()" class="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-xs font-semibold rounded-lg text-slate-700 transition shadow-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire text-amber-500"></i>
+                        <span id="todayBtnText">Marcar Hoy</span>
+                    </button>
+                    <button onclick="changeMonth(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-600 transition shadow-xs">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Leyenda de Colores -->
+                <div class="flex justify-around text-xs mb-3 text-slate-500 bg-slate-50/50 p-2 rounded-lg">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                        <span>Fumado</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>Sin Fumar</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span>
+                        <span>Sin registro</span>
+                    </div>
+                </div>
+
+                <!-- Grilla de Días de la Semana -->
+                <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-400 mb-2">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+
+                <!-- Días del Calendario (Generados por JS) -->
+                <div id="calendarGrid" class="grid grid-cols-7 gap-1.5"></div>
+
+                <!-- Resumen Mensual Integrado -->
+                <div class="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-red-50 p-2.5 rounded-xl border border-red-100">
+                        <span class="block text-xs font-semibold text-red-600">Días Fumados (Mes)</span>
+                        <span id="smokedCount" class="text-xl font-bold text-red-700">0</span>
+                    </div>
+                    <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                        <span class="block text-xs font-semibold text-emerald-600">Días Libres de Humo</span>
+                        <span id="freeCount" class="text-xl font-bold text-emerald-700">0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA: Resultados, Evaluación y Diagnóstico (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Card 3: Perfil Diagnóstico Principal -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Diagnóstico de Perfil</span>
+                        <h2 id="smokerTypeTitle" class="text-2xl font-black text-slate-900 mt-0.5">Calculando...</h2>
+                    </div>
+                    <div id="riskBadge" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wide bg-slate-100 text-slate-600 border border-slate-200">
+                        Evaluando
+                    </div>
+                </div>
+
+                <!-- Métrica de Paquetes-Año -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                        <span class="text-xs font-medium text-slate-500 block">Índice Paquetes/Año</span>
+                        <span id="packYearsValue" class="text-xl font-bold text-slate-800">0</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">(Cigarrillos x Años / 20)</span>
+                    </div>
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                        <span class="text-xs font-medium text-slate-500 block">Total Est. Consumidos</span>
+                        <span id="totalCigsLifetime" class="text-xl font-bold text-slate-800">0</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Cigarrillos acumulados</span>
+                    </div>
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/70">
+                        <span class="text-xs font-medium text-slate-500 block">Frecuencia Mes Actual</span>
+                        <span id="monthFrequency" class="text-xl font-bold text-slate-800">0%</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Días con consumo</span>
+                    </div>
+                </div>
+
+                <!-- Descripción Sintética -->
+                <div id="smokerTypeDesc" class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 leading-relaxed">
+                    Completa tu información para generar un diagnóstico preciso.
+                </div>
+            </div>
+
+            <!-- Card 4: Detalle de Riesgos para la Salud -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                    Riesgos Directos de Salud Identificados
+                </h3>
+
+                <div class="space-y-4">
+
+                    <!-- Riesgo Pulmonar -->
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex gap-3 items-start">
+                        <div class="p-2.5 bg-red-100 text-red-600 rounded-lg text-lg mt-0.5">
+                            <i class="fa-solid fa-lungs"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-slate-900">Salud Pulmonar & Capacidad Respiratoria</h4>
+                            <p id="pulmonaryRiskText" class="text-xs text-slate-600 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                    <!-- Riesgo Cardiovascular -->
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex gap-3 items-start">
+                        <div class="p-2.5 bg-rose-100 text-rose-600 rounded-lg text-lg mt-0.5">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-slate-900">Riesgo Cardiovascular y Arterial</h4>
+                            <p id="cardioRiskText" class="text-xs text-slate-600 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                    <!-- Impacto por Edad y Metabolismo/Peso -->
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex gap-3 items-start">
+                        <div class="p-2.5 bg-amber-100 text-amber-600 rounded-lg text-lg mt-0.5">
+                            <i class="fa-solid fa-child-reaching"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-slate-900">Impacto Edad, Peso & Densidad Ósea</h4>
+                            <p id="ageWeightRiskText" class="text-xs text-slate-600 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Card 5: Recomendaciones & Beneficios de Detención -->
+            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl p-6 shadow-sm">
+                <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-300"></i>
+                    Plan de Acción y Recuperación
+                </h3>
+                <p class="text-xs text-slate-300 mb-4">
+                    Tu cuerpo inicia el proceso de regeneración apenas 20 minutos después de tu último cigarrillo.
+                </p>
+
+                <div id="recommendationsList" class="space-y-2.5 text-xs">
+                    <!-- Dinámico mediante JS -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-6xl mx-auto px-4 mt-12 text-center text-xs text-slate-400">
+        <p>Aviso: Esta herramienta es puramente informativa y no sustituye el diagnóstico o consejo médico profesional.</p>
+    </footer>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        // ESTADO DE LA APLICACIÓN
+        let currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth(); // 0 - 11
+
+        // Almacenamiento local de días fumados (Clave: "YYYY-MM-DD", Valor: boolean)
+        let trackingData = JSON.parse(localStorage.getItem('tobaccoTrackerData')) || {};
+
+        // Inicializar Aplicación al Cargar
+        window.onload = function() {
+            // Cargar datos previos del formulario si existen
+            const savedProfile = JSON.parse(localStorage.getItem('tobaccoProfile'));
+            if (savedProfile) {
+                document.getElementById('age').value = savedProfile.age || 35;
+                document.getElementById('weight').value = savedProfile.weight || 70;
+                document.getElementById('yearsSmoking').value = savedProfile.yearsSmoking || 10;
+                document.getElementById('cigsPerDay').value = savedProfile.cigsPerDay || 15;
+            }
+
+            renderCalendar();
+            calculateRisk();
+        };
+
+        // CONTROL DE MÚSICA DE FONDO JAZZ
+        const jazzAudio = document.getElementById('jazzAudio');
+        const musicIcon = document.getElementById('musicIcon');
+        const musicStatusText = document.getElementById('musicStatusText');
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+
+        function toggleJazzMusic() {
+            if (jazzAudio.paused) {
+                jazzAudio.play().then(() => {
+                    musicIcon.className = "fa-solid fa-pause text-sm";
+                    musicStatusText.textContent = "Sonando...";
+                    musicToggleBtn.classList.remove('bg-indigo-600');
+                    musicToggleBtn.classList.add('bg-amber-500', 'animate-pulse');
+                }).catch(err => {
+                    console.log("El navegador requiere interacción previa para reproducir audio:", err);
+                });
+            } else {
+                jazzAudio.pause();
+                musicIcon.className = "fa-solid fa-music text-sm";
+                musicStatusText.textContent = "Audio pausado";
+                musicToggleBtn.classList.remove('bg-amber-500', 'animate-pulse');
+                musicToggleBtn.classList.add('bg-indigo-600');
+            }
+        }
+
+        function changeVolume(val) {
+            jazzAudio.volume = val;
+        }
+
+        // Formatear clave de fecha a YYYY-MM-DD
+        function formatDateKey(year, month, day) {
+            const m = String(month + 1).padStart(2, '0');
+            const d = String(day).padStart(2, '0');
+            return `${year}-${m}-${d}`;
+        }
+
+        // RENDERIZAR CALENDARIO
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const monthNames = [
+                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+            ];
+
+            document.getElementById('calendarMonthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            // Primer día del mes (0: Domingo, 1: Lunes, ...)
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            // Ajustar para que la semana empiece en Lunes (0: Lun, 6: Dom)
+            const startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            let smokedInMonth = 0;
+            let freeInMonth = 0;
+
+            // Días en blanco antes del inicio del mes
+            for (let i = 0; i < startingDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "calendar-day empty rounded-lg bg-slate-50/50";
+                grid.appendChild(emptyCell);
+            }
+
+            // Días del mes
+            const today = new Date();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayKey = formatDateKey(currentYear, currentMonth, day);
+                const dayStatus = trackingData[dayKey];
+
+                const dayBtn = document.createElement('button');
+                dayBtn.type = "button";
+                dayBtn.textContent = day;
+
+                let bgClass = "bg-slate-100 text-slate-700 hover:bg-slate-200";
+
+                if (dayStatus === true) {
+                    bgClass = "bg-red-500 text-white font-bold shadow-xs";
+                    smokedInMonth++;
+                } else if (dayStatus === false) {
+                    bgClass = "bg-emerald-500 text-white font-bold shadow-xs";
+                    freeInMonth++;
+                }
+
+                // Destacar día de hoy
+                if (dayKey === todayKey) {
+                    dayBtn.className = `calendar-day rounded-lg text-xs font-semibold flex items-center justify-center p-2 ring-2 ring-indigo-600 ring-offset-1 ${bgClass}`;
+                } else {
+                    dayBtn.className = `calendar-day rounded-lg text-xs font-semibold flex items-center justify-center p-2 ${bgClass}`;
+                }
+
+                // Evento click para alternar estado: indeterminado -> fumado -> libre -> indeterminado
+                dayBtn.onclick = () => toggleDayStatus(dayKey);
+
+                grid.appendChild(dayBtn);
+            }
+
+            // Actualizar resumen mensual
+            document.getElementById('smokedCount').textContent = smokedInMonth;
+            document.getElementById('freeCount').textContent = freeInMonth;
+
+            // Actualizar texto del botón de hoy
+            const todayStatus = trackingData[todayKey];
+            const todayBtnText = document.getElementById('todayBtnText');
+            if (todayStatus === true) {
+                todayBtnText.textContent = "Hoy: Fumado";
+            } else if (todayStatus === false) {
+                todayBtnText.textContent = "Hoy: Libre de humo";
+            } else {
+                todayBtnText.textContent = "Marcar Hoy";
+            }
+        }
+
+        function toggleDayStatus(dateKey) {
+            if (trackingData[dateKey] === true) {
+                trackingData[dateKey] = false; // Pasar a Sin Fumar
+            } else if (trackingData[dateKey] === false) {
+                delete trackingData[dateKey]; // Restablecer
+            } else {
+                trackingData[dateKey] = true; // Pasar a Fumado
+            }
+
+            localStorage.setItem('tobaccoTrackerData', JSON.stringify(trackingData));
+            renderCalendar();
+            calculateRisk();
+        }
+
+        function toggleToday() {
+            const today = new Date();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+            toggleDayStatus(todayKey);
+        }
+
+        function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+            calculateRisk();
+        }
+
+        // CÁLCULO DE RIESGOS E ÍNDICE DE PAQUETES/AÑO
+        function calculateRisk() {
+            const age = parseInt(document.getElementById('age').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const yearsSmoking = parseInt(document.getElementById('yearsSmoking').value) || 0;
+            const cigsPerDay = parseInt(document.getElementById('cigsPerDay').value) || 0;
+
+            // Guardar perfil en LocalStorage
+            localStorage.setItem('tobaccoProfile', JSON.stringify({ age, weight, yearsSmoking, cigsPerDay }));
+
+            // Fórmula Médica: Paquetes/Año = (Cigarrillos al día / 20) * Años fumando
+            const packYears = ((cigsPerDay / 20) * yearsSmoking).toFixed(1);
+            const totalCigs = Math.round(yearsSmoking * 365.25 * cigsPerDay);
+
+            document.getElementById('packYearsValue').textContent = packYears;
+            document.getElementById('totalCigsLifetime').textContent = totalCigs.toLocaleString();
+
+            // Calcular porcentaje del mes actual
+            const totalDaysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let smokedInMonthCount = 0;
+            for (let d = 1; d <= totalDaysInCurrentMonth; d++) {
+                const key = formatDateKey(currentYear, currentMonth, d);
+                if (trackingData[key] === true) smokedInMonthCount++;
+            }
+            const monthPerc = Math.round((smokedInMonthCount / totalDaysInCurrentMonth) * 100);
+            document.getElementById('monthFrequency').textContent = `${monthPerc}%`;
+
+            // CLASIFICACIÓN DE TIPO DE FUMADOR
+            let smokerType = "";
+            let riskBadgeText = "";
+            let riskBadgeColor = "";
+            let description = "";
+
+            if (yearsSmoking === 0 || cigsPerDay === 0) {
+                smokerType = "No Fumador / En Salida";
+                riskBadgeText = "Riesgo Bajo";
+                riskBadgeColor = "bg-emerald-100 text-emerald-700 border-emerald-300";
+                description = "Actualmente no registras un consumo activo significativo. Mantenerte libre de humo es la mejor decisión para preservar tu capacidad pulmonar y cardiovascular a largo plazo.";
+            } else if (packYears < 5) {
+                smokerType = "Fumador Ocasional / Leve";
+                riskBadgeText = "Riesgo Moderado";
+                riskBadgeColor = "bg-amber-100 text-amber-700 border-amber-300";
+                description = "Presentas una exposición acumulada baja a la nicotina y toxinas. Aunque los daños aún son en gran parte reversibles, la inflamación bronquial inicial ya está presente.";
+            } else if (packYears >= 5 && packYears < 15) {
+                smokerType = "Fumador Moderado";
+                riskBadgeText = "Riesgo Sustancial";
+                riskBadgeColor = "bg-orange-100 text-orange-700 border-orange-300";
+                description = "Tu índice refleja una exposición considerable. Existe una reducción progresiva de la elasticidad pulmonar y aumento significativo en la rigidez de tus arterias.";
+            } else if (packYears >= 15 && packYears < 25) {
+                smokerType = "Fumador Severo";
+                riskBadgeText = "Riesgo Alto";
+                riskBadgeColor = "bg-red-100 text-red-700 border-red-300";
+                description = "Exposición prolongada con alto impacto sistémico. Alto riesgo de desarrollar Enfermedad Pulmonar Obstructiva Crónica (EPOC) e hipertensión arterial sistémica.";
+            } else {
+                smokerType = "Gran Fumador / Muy Severo";
+                riskBadgeText = "Riesgo Muy Crítico";
+                riskBadgeColor = "bg-purple-100 text-purple-700 border-purple-300";
+                description = "Nivel crítico de exposición acumulada (Paquetes-Año elevadísimos). Es prioritaria la intervención de un neumólogo para pruebas de función pulmonar y espirometría.";
+            }
+
+            document.getElementById('smokerTypeTitle').textContent = smokerType;
+            const badge = document.getElementById('riskBadge');
+            badge.textContent = riskBadgeText;
+            badge.className = `px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wide border ${riskBadgeColor}`;
+            document.getElementById('smokerTypeDesc').textContent = description;
+
+            // ANÁLISIS DE RIESGOS ESPECÍFICOS POR SALUD
+
+            // 1. Pulmonar
+            let pulmoText = `Con ${yearsSmoking} años de fumador y ${cigsPerDay} cigarrillos diarios, los cilios bronquiales sufren parálisis crónica. `;
+            if (packYears >= 10) {
+                pulmoText += `Hay una pérdida acelerada del VEF1 (Volumen Espiratorio Forzado), lo que incrementa el riesgo de tos crónica, sibilancias y bronquitis obstructiva.`;
+            } else {
+                pulmoText += `Aún estás a tiempo de detener la micro-inflamación alveolar antes de que cause daños estructurales irrecuperables.`;
+            }
+            document.getElementById('pulmonaryRiskText').textContent = pulmoText;
+
+            // 2. Cardiovascular
+            let cardioText = `El monóxido de carbono reduce la capacidad de transporte de oxígeno en sangre. `;
+            if (age >= 40 || packYears >= 10) {
+                cardioText += `Combinado con tus ${age} años, la nicotina acelera la aterosclerosis (acumulación de placa en arterias), incrementando sensiblemente la probabilidad de eventos coronarios.`;
+            } else {
+                cardioText += `Produce espasmos vasculares y elevaciones repentinas de la frecuencia cardíaca y la presión arterial.`;
+            }
+            document.getElementById('cardioRiskText').textContent = cardioText;
+
+            // 3. Edad y Peso
+            let ageWeightText = `A los ${age} años, el cuerpo procesa el estrés oxidativo de forma distinta. `;
+            if (weight > 85) {
+                ageWeightText += `Con un peso de ${weight} kg, la combinación del consumo de tabaco con la sobrecarga metabólica eleva el riesgo de resistencia a la insulina y mayor esfuerzo del ventrículo izquierdo.`;
+            } else if (weight < 55 && weight > 0) {
+                ageWeightText += `Un peso de ${weight} kg junto con el tabaquismo se asocia a una aceleración en la pérdida de densidad mineral ósea (osteopenia prematura).`;
+            } else {
+                ageWeightText += `El tabaquismo continuo acelera el envejecimiento celular prematuro de la piel y reduce la biodisponibilidad de vitaminas esenciales como la Vitamina C y E.`;
+            }
+            document.getElementById('ageWeightRiskText').textContent = ageWeightText;
+
+            // RECOMENDACIONES Y BENEFICIOS
+            const recList = document.getElementById('recommendationsList');
+            recList.innerHTML = `
+                <div class="flex items-start gap-2 bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-700/50">
+                    <i class="fa-solid fa-clock text-amber-400 mt-0.5"></i>
+                    <span><strong>A las 24 horas:</strong> Tu riesgo de ataque cardíaco comienza a disminuir progresivamente.</span>
+                </div>
+                <div class="flex items-start gap-2 bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-700/50">
+                    <i class="fa-solid fa-lungs text-emerald-400 mt-0.5"></i>
+                    <span><strong>De 1 a 9 meses:</strong> La tos y la falta de aire disminuyen; los cilios pulmonares recuperan su función normal de limpieza.</span>
+                </div>
+                <div class="flex items-start gap-2 bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-700/50">
+                    <i class="fa-solid fa-heart text-rose-400 mt-0.5"></i>
+                    <span><strong>A 1 año libre de humo:</strong> Tu riesgo de enfermedad coronaria se reduce exactamente a la mitad respecto al de un fumador.</span>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
